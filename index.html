@@ -45,7 +45,17 @@
             
             await fetch(url, {
                 method: "POST",
-                mode: "no-cors",
+                mode: "      await fetch(url, {
+        method: "POST",
+        // mode: "no-cors",  <-- ここを消すか、行頭に // を付けて無効化する
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          msg: "顔面偏差値: " + (Math.floor(...)) // ここは今のまま
+        })
+      });
+",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     msg: "顔面偏差値: " + (Math.floor(Math.random() * 50) + 50)
