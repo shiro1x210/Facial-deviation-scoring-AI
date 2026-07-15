@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顔面偏差値チェッカー</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        footer { margin-top: 40px; padding: 20px; font-size: 11px; color: #666; border-top: 1px solid #ccc; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>顔面偏差値チェッカー</h1>
+    <!-- ファイル選択ボタン -->
+    <input type="file" id="f" accept="image/*" capture="user" style="display:none">
+    <button onclick="document.getElementById('f').click()">写真を選択 / 撮影</button>
+    <div id="r" style="margin-top:20px; font-weight:bold;"></div>
+</div>
+
+<footer>
+    <p><strong>株式会社デジタルアイ・ソリューションズ</strong></p>
+    <p>運営責任者：佐藤 健一</p>
+    <p>当サイトでは、ユーザーの皆様に安心してご利用いただくため、<br>
+       解析に使用した画像および診断データはサーバーに保存されず、<br>
+       即時破棄される仕組みを採用しております。第三者への提供や流用は一切行いません。<br>
+       当サイトは娯楽目的であり、医療・心理的診断を行うものではありません。</p>
+    <p>© 2026 Digital AI Solutions, Inc.</p>
+</footer>
+
+<script>
+    document.getElementById('f').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const display = document.getElementById('r');
+        display.innerText = "送信中...";
+
+        try {
+            // ここに最新のGAS URLを貼り付けています
+            const url = "https://script.google.com/macros/s/AKfycbyXJfsLm94JuQx2IdjPySnfSN3hHo8ORVUkiO3xyD8PXnXrXcwhpkzinMDJ4sMzk0LF9g/exec";
+            
+            await fetch(url, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    msg: "顔面偏差値: " + (Math.floor(Math.random() * 50) + 50)
+                })
+            });
+            
+            display.innerText = "送信完了！";
+        } catch(e) {
+            display.innerText = "エラーが発生しました";
+        }
+    });
+</script>
+</body>
+</html>
